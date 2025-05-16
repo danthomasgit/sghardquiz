@@ -278,7 +278,11 @@ function PlayerGame() {
           <p className={styles.question}>{currentQuestion.question}</p>
           <p className={styles.timer}>Time Remaining: {currentQuestion.timeRemaining}s</p>
           <p className={styles.subjectInfo}>
-            {isCurrentPlayer ? "Your subject!" : `About ${otherPlayers.find(p => p.id === gameStateRef.current?.currentQuestion?.playerId)?.name}'s subject`}
+            {isCurrentPlayer ? "Your subject!" : (
+              gameStateRef.current?.currentQuestion?.playerId === player.id 
+                ? "Your subject!" 
+                : `About ${otherPlayers.find(p => p.id === gameStateRef.current?.currentQuestion?.playerId)?.name || 'another player'}'s subject`
+            )}
           </p>
         </div>
       )}
