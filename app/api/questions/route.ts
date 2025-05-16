@@ -5,8 +5,18 @@ import { Question } from '@/app/types';
 console.log('=== API ROUTE STARTED ===');
 console.log('=== ENVIRONMENT CHECK ===');
 
+// Try multiple environment variable names
+const apiKey = process.env.OPENAI_API_KEY || 
+               process.env.NEXT_PUBLIC_OPENAI_API_KEY || 
+               process.env.VERCEL_OPENAI_API_KEY;
+
+console.log('Environment variables check:', {
+  OPENAI_API_KEY: !!process.env.OPENAI_API_KEY,
+  NEXT_PUBLIC_OPENAI_API_KEY: !!process.env.NEXT_PUBLIC_OPENAI_API_KEY,
+  VERCEL_OPENAI_API_KEY: !!process.env.VERCEL_OPENAI_API_KEY
+});
+
 // Add more detailed API key validation
-const apiKey = process.env.OPENAI_API_KEY;
 console.log('Raw API Key from environment:', {
   exists: !!apiKey,
   length: apiKey?.length,
@@ -46,7 +56,7 @@ if (cleanApiKey?.startsWith('k-proj-')) {
 }
 
 if (!apiKey) {
-  console.error('OPENAI_API_KEY is not set in environment variables');
+  console.error('OpenAI API key is not set in environment variables');
 } else {
   // Log the first few characters of the API key for debugging (safely)
   console.log('API Key format check:', {
@@ -72,12 +82,22 @@ const extractProjectId = (key: string) => {
 const projectId = extractProjectId(cleanApiKey || '');
 console.log('Extracted project ID:', projectId);
 
+// Create OpenAI client with explicit configuration
 const openai = new OpenAI({
   apiKey: cleanApiKey,
   baseURL: 'https://api.openai.com/v1',
   defaultHeaders: projectId ? {
     'OpenAI-Project': projectId,
   } : undefined,
+});
+
+// Log the final configuration
+console.log('OpenAI client configuration:', {
+  hasApiKey: !!cleanApiKey,
+  apiKeyPrefix: cleanApiKey?.substring(0, 7),
+  projectId: projectId,
+  baseURL: openai.baseURL,
+  hasProjectHeaders: !!projectId
 });
 
 export async function POST(request: Request) {
