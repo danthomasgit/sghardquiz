@@ -15,10 +15,23 @@ if (!apiKey) {
   });
 }
 
+// Extract project ID from the API key if it's in the format sk-proj-{projectId}-{key}
+const extractProjectId = (key: string) => {
+  if (key.startsWith('sk-proj-')) {
+    const parts = key.split('-');
+    if (parts.length >= 3) {
+      return parts[2];
+    }
+  }
+  return null;
+};
+
+const projectId = extractProjectId(apiKey || '');
+console.log('Extracted project ID:', projectId);
+
 const openai = new OpenAI({
   apiKey: apiKey,
-  organization: process.env.OPENAI_ORG_ID, // Add organization ID if needed
-  project: process.env.OPENAI_PROJECT_ID, // Add project ID if needed
+  project: projectId || undefined,
 });
 
 export async function POST(request: Request) {
@@ -54,8 +67,7 @@ export async function POST(request: Request) {
     try {
       console.log('[API] OpenAI configuration:', {
         hasApiKey: !!apiKey,
-        hasOrgId: !!process.env.OPENAI_ORG_ID,
-        hasProjectId: !!process.env.OPENAI_PROJECT_ID,
+        projectId: projectId,
         model: 'gpt-4'
       });
 
@@ -110,8 +122,7 @@ export async function POST(request: Request) {
         status: openaiError.status,
         type: openaiError.type,
         code: openaiError.code,
-        organization: process.env.OPENAI_ORG_ID,
-        project: process.env.OPENAI_PROJECT_ID
+        projectId: projectId
       });
       throw openaiError;
     }
