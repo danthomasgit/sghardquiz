@@ -7,19 +7,27 @@ console.log('=== ENVIRONMENT CHECK ===');
 
 // Add more detailed API key validation
 const apiKey = process.env.OPENAI_API_KEY;
-console.log('Environment check:', {
-  hasApiKey: !!apiKey,
-  keyLength: apiKey?.length,
-  keyPrefix: apiKey?.substring(0, 10),
-  allEnvVars: Object.keys(process.env).filter(key => key.includes('OPENAI')),
-  // Log the first 10 characters of the key for debugging
-  keyStart: apiKey?.substring(0, 10),
-  // Log if the key contains any whitespace
-  hasWhitespace: apiKey?.includes(' '),
-  // Log if the key contains any newlines
-  hasNewlines: apiKey?.includes('\n'),
-  // Log the exact length
-  exactLength: apiKey?.length
+console.log('Raw API Key from environment:', {
+  exists: !!apiKey,
+  length: apiKey?.length,
+  first10Chars: apiKey?.substring(0, 10),
+  last10Chars: apiKey?.substring(-10),
+  containsSkProj: apiKey?.includes('sk-proj-'),
+  containsKProj: apiKey?.includes('k-proj-'),
+  // Log each character of the prefix for debugging
+  prefixChars: apiKey?.substring(0, 7).split('').map(c => c.charCodeAt(0))
+});
+
+// Clean the API key by removing any whitespace or newlines
+const cleanApiKey = apiKey?.trim().replace(/\s+/g, '');
+console.log('Cleaned API Key:', {
+  length: cleanApiKey?.length,
+  first10Chars: cleanApiKey?.substring(0, 10),
+  last10Chars: cleanApiKey?.substring(-10),
+  containsSkProj: cleanApiKey?.includes('sk-proj-'),
+  containsKProj: cleanApiKey?.includes('k-proj-'),
+  // Log each character of the prefix for debugging
+  prefixChars: cleanApiKey?.substring(0, 7).split('').map(c => c.charCodeAt(0))
 });
 
 if (!apiKey) {
@@ -46,16 +54,8 @@ const extractProjectId = (key: string) => {
   return null;
 };
 
-const projectId = extractProjectId(apiKey || '');
+const projectId = extractProjectId(cleanApiKey || '');
 console.log('Extracted project ID:', projectId);
-
-// Clean the API key by removing any whitespace or newlines
-const cleanApiKey = apiKey?.trim().replace(/\s+/g, '');
-console.log('Cleaned API key check:', {
-  originalLength: apiKey?.length,
-  cleanedLength: cleanApiKey?.length,
-  cleanedPrefix: cleanApiKey?.substring(0, 7)
-});
 
 const openai = new OpenAI({
   apiKey: cleanApiKey,
