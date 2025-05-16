@@ -86,9 +86,8 @@ console.log('Extracted project ID:', projectId);
 const openai = new OpenAI({
   apiKey: cleanApiKey,
   baseURL: 'https://api.openai.com/v1',
-  defaultHeaders: projectId ? {
-    'OpenAI-Project': projectId,
-  } : undefined,
+  // Remove the project header since it's causing issues
+  defaultHeaders: undefined
 });
 
 // Log the final configuration
@@ -97,7 +96,7 @@ console.log('OpenAI client configuration:', {
   apiKeyPrefix: cleanApiKey?.substring(0, 7),
   projectId: projectId,
   baseURL: openai.baseURL,
-  hasProjectHeaders: !!projectId
+  hasProjectHeaders: false
 });
 
 export async function POST(request: Request) {
