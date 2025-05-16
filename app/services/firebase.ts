@@ -189,26 +189,36 @@ export const addPlayer = async (gameId: string, player: Omit<Player, 'id' | 'que
 export const updatePlayerBuzzer = async (playerId: string, buzzed: boolean): Promise<void> => {
   const playerRef = doc(db, PLAYERS_COLLECTION, playerId);
   const gameRef = doc(db, GAMES_COLLECTION, 'default-game');
-  
+
   // Update player's buzzer state
-  await updateDoc(playerRef, { 
-    buzzed,
-    hasBuzzed: buzzed,
-    lastSeen: serverTimestamp(),
-    isOnline: true
-  });
+  try {
+    await updateDoc(playerRef, { 
+      buzzed,
+      hasBuzzed: buzzed,
+      lastSeen: serverTimestamp(),
+      isOnline: true
+    });
+    console.log('[FIREBASE] Updated player buzzer state for', playerId, 'buzzed:', buzzed);
+  } catch (err) {
+    console.error('[FIREBASE] Error updating player buzzer state:', err);
+  }
 
   // If buzzing in, update the game state to pause the timer
   if (buzzed) {
-    const gameDoc = await getDoc(gameRef);
-    if (gameDoc.exists()) {
-      const gameData = gameDoc.data() as GameState;
-      if (gameData.currentQuestion) {
-        await updateDoc(gameRef, {
-          'currentQuestion.buzzedPlayerId': playerId,
-          'currentQuestion.answerStatus': 'pending'
-        });
+    try {
+      const gameDoc = await getDoc(gameRef);
+      if (gameDoc.exists()) {
+        const gameData = gameDoc.data() as GameState;
+        if (gameData.currentQuestion) {
+          await updateDoc(gameRef, {
+            'currentQuestion.buzzedPlayerId': playerId,
+            'currentQuestion.answerStatus': 'pending'
+          });
+          console.log('[FIREBASE] Set buzzedPlayerId in game state:', playerId);
+        }
       }
+    } catch (err) {
+      console.error('[FIREBASE] Error updating buzzedPlayerId in game state:', err);
     }
   }
 };
