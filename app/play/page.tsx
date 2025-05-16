@@ -232,6 +232,10 @@ function PlayerGame() {
     }
   };
 
+  // Combine all players for the scores list
+  const allPlayers = player ? [player, ...otherPlayers] : otherPlayers;
+  const sortedPlayers = [...allPlayers].sort((a, b) => b.score - a.score);
+
   if (isLoading) {
     return (
       <div className={styles.page}>
@@ -267,52 +271,55 @@ function PlayerGame() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.header}>
-        <h1>Welcome, {player.name}!</h1>
-        <p className={styles.subject}>Subject: {player.subject}</p>
-      </div>
-
-      {currentQuestion && (
-        <div className={styles.questionCard}>
-          <h2>Current Question</h2>
-          <p className={styles.question}>{currentQuestion.question}</p>
-          <p className={styles.timer}>Time Remaining: {currentQuestion.timeRemaining}s</p>
-          <p className={styles.subjectInfo}>
-            {isCurrentPlayer ? "Your subject!" : (
-              gameStateRef.current?.currentQuestion?.playerId === player.id 
-                ? "Your subject!" 
-                : `About ${otherPlayers.find(p => p.id === gameStateRef.current?.currentQuestion?.playerId)?.name || 'another player'}'s subject`
-            )}
-          </p>
+      <div className={styles.columns}>
+        {/* Left column: Question, subject, timer */}
+        <div className={styles.leftColumn}>
+          <div className={styles.header}>
+            <h1>Welcome, {player.name}!</h1>
+            <p className={styles.subject}>Subject: {player.subject}</p>
+          </div>
+          {currentQuestion && (
+            <div className={styles.questionCard}>
+              <h2>Current Question</h2>
+              <p className={styles.question}>{currentQuestion.question}</p>
+              <p className={styles.timer}>Time Remaining: {currentQuestion.timeRemaining}s</p>
+              <p className={styles.subjectInfo}>
+                {isCurrentPlayer ? "Your subject!" : (
+                  gameStateRef.current?.currentQuestion?.playerId === player.id 
+                    ? "Your subject!" 
+                    : `About ${allPlayers.find(p => p.id === gameStateRef.current?.currentQuestion?.playerId)?.name || 'another player'}'s subject`
+                )}
+              </p>
+            </div>
+          )}
         </div>
-      )}
-
-      <div className={styles.buzzerContainer}>
-        <button
-          onClick={handleBuzzer}
-          disabled={!canBuzz}
-          className={`${styles.buzzerButton} ${player.hasBuzzed ? styles.buzzed : ""} ${
-            !canBuzz ? styles.disabled : ""
-          }`}
-        >
-          {player.hasBuzzed ? "Buzzed!" : "Buzz In!"}
-        </button>
-        {!canBuzz && !player.hasBuzzed && (
-          <p className={styles.waitMessage}>
-            {currentQuestion ? "Waiting for your turn..." : "Waiting for the game to start..."}
-          </p>
-        )}
-      </div>
-
-      <div className={styles.otherPlayers}>
-        <h2>Other Players' Scores</h2>
-        <ul>
-          {otherPlayers.map(otherPlayer => (
-            <li key={otherPlayer.id}>
-              {otherPlayer.name}: {otherPlayer.score} points
-            </li>
-          ))}
-        </ul>
+        {/* Right column: Buzzer and scores */}
+        <div className={styles.rightColumn}>
+          <div className={styles.buzzerContainer}>
+            <button
+              onClick={handleBuzzer}
+              disabled={!canBuzz}
+              className={`${styles.buzzerButton} ${player.hasBuzzed ? styles.buzzed : ""} ${!canBuzz ? styles.disabled : ""}`}
+            >
+              {player.hasBuzzed ? "Buzzed!" : "Buzz In!"}
+            </button>
+            {!canBuzz && !player.hasBuzzed && (
+              <p className={styles.waitMessage}>
+                {currentQuestion ? "Waiting for your turn..." : "Waiting for the game to start..."}
+              </p>
+            )}
+          </div>
+          <div className={styles.scoresList}>
+            <h2>Scores</h2>
+            <ul>
+              {sortedPlayers.map(p => (
+                <li key={p.id} className={p.id === player.id ? styles.currentPlayerScore : undefined}>
+                  {p.name}: <span className={styles.scoreValue}>{p.score}pts</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   );
