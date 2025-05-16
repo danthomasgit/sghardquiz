@@ -2,7 +2,7 @@ import { Question } from '../types';
 
 export async function generateQuestions(subject: string, count: number = 5): Promise<Question[]> {
   try {
-    console.log(`Attempting to generate ${count} questions for subject: ${subject}`);
+    console.log(`[Service] Attempting to generate ${count} questions for subject: ${subject}`);
     
     const response = await fetch('/api/questions', {
       method: 'POST',
@@ -12,9 +12,11 @@ export async function generateQuestions(subject: string, count: number = 5): Pro
       body: JSON.stringify({ subject, count }),
     });
 
+    console.log(`[Service] API Response status: ${response.status}`);
+    
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('Failed to generate questions:', {
+      console.error('[Service] Failed to generate questions:', {
         status: response.status,
         statusText: response.statusText,
         errorData
@@ -23,22 +25,27 @@ export async function generateQuestions(subject: string, count: number = 5): Pro
     }
 
     const data = await response.json();
+    console.log('[Service] Received response data:', {
+      hasQuestions: !!data.questions,
+      questionCount: data.questions?.length
+    });
+
     if (!data.questions || !Array.isArray(data.questions)) {
-      console.error('Invalid response format:', data);
+      console.error('[Service] Invalid response format:', data);
       throw new Error('Invalid response format from question generation');
     }
 
-    console.log(`Successfully generated ${data.questions.length} questions`);
+    console.log(`[Service] Successfully generated ${data.questions.length} questions`);
     return data.questions;
   } catch (error) {
-    console.error('Error in generateQuestions:', error);
-    console.log('Falling back to default questions');
+    console.error('[Service] Error in generateQuestions:', error);
+    console.log('[Service] Falling back to default questions');
     return generateFallbackQuestions(subject, count);
   }
 }
 
 function generateFallbackQuestions(subject: string, count: number): Question[] {
-  console.log(`Generating ${count} fallback questions for subject: ${subject}`);
+  console.log(`[Service] Generating ${count} fallback questions for subject: ${subject}`);
   
   const fallbackQuestions: Question[] = [
     {

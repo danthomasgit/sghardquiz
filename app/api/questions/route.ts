@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     }
 
     const { subject, count = 5 } = await request.json();
-    console.log(`Generating ${count} questions for subject: ${subject}`);
+    console.log(`[API] Starting question generation for subject: ${subject}, count: ${count}`);
 
     const prompt = `Generate ${count} trivia questions about ${subject}. 
     Requirements:
@@ -50,8 +50,15 @@ export async function POST(request: Request) {
       }
     ]`;
 
-    console.log('Sending request to OpenAI...');
+    console.log('[API] Sending request to OpenAI...');
     try {
+      console.log('[API] OpenAI configuration:', {
+        hasApiKey: !!apiKey,
+        hasOrgId: !!process.env.OPENAI_ORG_ID,
+        hasProjectId: !!process.env.OPENAI_PROJECT_ID,
+        model: 'gpt-4'
+      });
+
       const completion = await openai.chat.completions.create({
         messages: [
           {
@@ -67,18 +74,20 @@ export async function POST(request: Request) {
         temperature: 0.7,
       });
 
+      console.log('[API] Received response from OpenAI');
       const response = completion.choices[0].message.content;
       if (!response) {
-        console.error('No response content from OpenAI');
+        console.error('[API] No response content from OpenAI');
         throw new Error('No response from OpenAI');
       }
 
-      console.log('Received response from OpenAI, cleaning and parsing...');
+      console.log('[API] Cleaning and parsing response...');
       // Clean the response to ensure it's valid JSON
       const cleanedResponse = response.trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
       
       try {
         const parsedResponse = JSON.parse(cleanedResponse);
+        console.log('[API] Successfully parsed JSON response');
         const questions = Array.isArray(parsedResponse) ? parsedResponse : parsedResponse.questions;
 
         // Validate and transform the questions
@@ -88,15 +97,15 @@ export async function POST(request: Request) {
           difficulty: q.difficulty === 'medium' || q.difficulty === 'hard' ? q.difficulty : 'medium'
         }));
 
-        console.log(`Successfully generated ${formattedQuestions.length} questions`);
+        console.log(`[API] Successfully generated ${formattedQuestions.length} questions`);
         return NextResponse.json({ questions: formattedQuestions });
       } catch (parseError) {
-        console.error('Error parsing OpenAI response:', parseError);
-        console.error('Raw response:', response);
+        console.error('[API] Error parsing OpenAI response:', parseError);
+        console.error('[API] Raw response:', response);
         throw new Error('Failed to parse questions from OpenAI response');
       }
     } catch (openaiError: any) {
-      console.error('OpenAI API Error:', {
+      console.error('[API] OpenAI API Error:', {
         message: openaiError.message,
         status: openaiError.status,
         type: openaiError.type,
@@ -107,7 +116,7 @@ export async function POST(request: Request) {
       throw openaiError;
     }
   } catch (error) {
-    console.error('Error in question generation:', error);
+    console.error('[API] Error in question generation:', error);
     // Return more detailed error information
     return NextResponse.json(
       { 
