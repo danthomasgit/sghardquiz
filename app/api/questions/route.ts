@@ -18,13 +18,13 @@ if (!apiKey) {
   console.log('API Key format check:', {
     length: apiKey.length,
     startsWith: apiKey.substring(0, 3),
-    isValidFormat: apiKey.startsWith('sk-') || apiKey.startsWith('k-proj-')
+    isValidFormat: apiKey.startsWith('sk-') || apiKey.startsWith('sk-proj-')
   });
 }
 
-// Extract project ID from the API key if it's in the format k-proj-{projectId}-{key}
+// Extract project ID from the API key if it's in the format sk-proj-{projectId}-{key}
 const extractProjectId = (key: string) => {
-  if (key.startsWith('k-proj-')) {
+  if (key.startsWith('sk-proj-')) {
     const parts = key.split('-');
     if (parts.length >= 3) {
       return parts[2];
