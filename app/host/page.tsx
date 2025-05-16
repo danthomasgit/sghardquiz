@@ -15,7 +15,6 @@ import {
 import { Player, GameState } from "../types";
 
 export default function Host() {
-  const [players, setPlayers] = useState<Player[]>([]);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
@@ -23,14 +22,10 @@ export default function Host() {
 
   useEffect(() => {
     const gameId = "default-game";
-    // Subscribe to players for presence/online status only
-    const unsubscribePlayers = subscribeToPlayers(gameId, (updatedPlayers) => {
-      setPlayers(updatedPlayers);
-      setIsLoading(false);
-    });
-    // Subscribe to game for game state and scores
+    // Only subscribe to game for game state and scores
     const unsubscribeGame = subscribeToGame(gameId, (updatedGameState) => {
       setGameState(updatedGameState);
+      setIsLoading(false);
       // Debug log for current question and buzzedPlayerId
       if (updatedGameState?.currentQuestion) {
         console.log("[HOST] Current Question:", updatedGameState.currentQuestion);
@@ -38,7 +33,6 @@ export default function Host() {
       }
     });
     return () => {
-      unsubscribePlayers();
       unsubscribeGame();
       if (timer) {
         clearInterval(timer);
@@ -123,6 +117,7 @@ export default function Host() {
   };
 
   // For the scores list:
+  const players = gameState?.players || [];
   const scoresArray = gameState && gameState.scores && players.length > 0
     ? players.map(p => ({ ...p, score: gameState.scores[p.id] ?? 0 }))
     : [];
@@ -217,7 +212,6 @@ export default function Host() {
           >
             <div className={styles.playerHeader}>
               <h2>{player.name}</h2>
-              <div className={`${styles.statusDot} ${player.isOnline ? styles.online : styles.offline}`} />
             </div>
             <p className={styles.subject}>Specialist in: {player.subject}</p>
             <p className={styles.score}>Score: {player.score}</p>

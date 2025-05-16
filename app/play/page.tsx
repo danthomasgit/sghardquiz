@@ -27,7 +27,6 @@ function PlayerGame() {
 
   useEffect(() => {
     let gameUnsubscribe: (() => void) | undefined;
-    let playersUnsubscribe: (() => void) | undefined;
     const storedPlayerId = localStorage.getItem("playerId");
     const storedPlayerName = localStorage.getItem("playerName");
     const storedPlayerSubject = localStorage.getItem("playerSubject");
@@ -158,15 +157,6 @@ function PlayerGame() {
               setCanBuzz(false);
             }
           });
-          // Subscribe to players for presence/online status only
-          playersUnsubscribe = subscribeToPlayers("default-game", (updatedPlayers) => {
-            setAllPlayers(updatedPlayers);
-            // Update the current player from Firestore
-            if (player) {
-              const updatedCurrent = updatedPlayers.find(p => p.id === player.id);
-              if (updatedCurrent) setPlayer(updatedCurrent);
-            }
-          });
         } catch (err) {
           setError("Failed to restore player session. Please try again.");
           setIsLoading(false);
@@ -180,7 +170,6 @@ function PlayerGame() {
 
     return () => {
       if (gameUnsubscribe) gameUnsubscribe();
-      if (playersUnsubscribe) playersUnsubscribe();
       hasInitializedRef.current = false;
       createdPlayerIdRef.current = null;
       gameStateRef.current = null;
@@ -217,27 +206,6 @@ function PlayerGame() {
     return () => {
       console.log("Cleaning up game state subscription for player:", player.id);
       unsubscribe();
-    };
-  }, [player]);
-
-  useEffect(() => {
-    if (!player) return;
-
-    const handleVisibilityChange = () => {
-      updatePlayerOnlineStatus(player.id, !document.hidden);
-    };
-
-    const handleBeforeUnload = () => {
-      updatePlayerOnlineStatus(player.id, false);
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      updatePlayerOnlineStatus(player.id, false);
     };
   }, [player]);
 
