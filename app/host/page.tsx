@@ -46,29 +46,28 @@ export default function Host() {
       gameState.currentQuestion &&
       !gameState.currentQuestion.buzzedPlayerId // Only run timer if no one has buzzed
     ) {
+      if (timer) clearInterval(timer); // Always clear any existing timer
       const newTimer = setInterval(async () => {
         const timeRemaining = (gameState.currentQuestion?.timeRemaining || 0) - 1;
         if (timeRemaining <= 0) {
-          if (timer) {
-            clearInterval(timer);
-          }
+          clearInterval(newTimer); // Clear timer before moving to next question
+          setTimer(null);
           await nextQuestion("default-game");
         } else {
           await updateQuestionTimer("default-game", timeRemaining);
         }
       }, 1000);
-
       setTimer(newTimer);
     } else {
-      // Pause timer if someone buzzed or game not in progress
       if (timer) {
         clearInterval(timer);
+        setTimer(null);
       }
     }
-
     return () => {
       if (timer) {
         clearInterval(timer);
+        setTimer(null);
       }
     };
   }, [gameState?.status, gameState?.currentQuestion]);
