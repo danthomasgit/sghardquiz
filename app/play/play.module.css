@@ -51,7 +51,18 @@
   font-size: 1.2rem;
   color: #dc2626;
   font-weight: 600;
+  margin: 0 0 1rem 0;
+}
+
+.subjectInfo {
+  font-size: 1.1rem;
+  color: #4b5563;
   margin: 0;
+  font-style: italic;
+  padding: 0.5rem;
+  background: #f3f4f6;
+  border-radius: 0.5rem;
+  text-align: center;
 }
 
 .buzzerContainer {
