@@ -18,13 +18,13 @@ if (!apiKey) {
   console.log('API Key format check:', {
     length: apiKey.length,
     startsWith: apiKey.substring(0, 3),
-    isValidFormat: apiKey.startsWith('sk-')
+    isValidFormat: apiKey.startsWith('sk-') || apiKey.startsWith('k-proj-')
   });
 }
 
-// Extract project ID from the API key if it's in the format sk-proj-{projectId}-{key}
+// Extract project ID from the API key if it's in the format k-proj-{projectId}-{key}
 const extractProjectId = (key: string) => {
-  if (key.startsWith('sk-proj-')) {
+  if (key.startsWith('k-proj-')) {
     const parts = key.split('-');
     if (parts.length >= 3) {
       return parts[2];
@@ -39,9 +39,9 @@ console.log('Extracted project ID:', projectId);
 const openai = new OpenAI({
   apiKey: apiKey,
   baseURL: 'https://api.openai.com/v1',
-  defaultHeaders: {
-    'OpenAI-Project': projectId || '',
-  },
+  defaultHeaders: projectId ? {
+    'OpenAI-Project': projectId,
+  } : undefined,
 });
 
 export async function POST(request: Request) {
