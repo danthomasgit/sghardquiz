@@ -226,10 +226,12 @@ function PlayerGame() {
 
   const handleBuzzer = async () => {
     if (!player || !canBuzz) return;
+    console.log('[PLAYER] Buzz button pressed by', player.id);
     try {
       await updatePlayerBuzzer(player.id, true);
+      console.log('[PLAYER] Buzz update sent for', player.id);
     } catch (err) {
-      console.error("Error updating buzzer:", err);
+      console.error('[PLAYER] Error updating buzzer:', err);
     }
   };
 

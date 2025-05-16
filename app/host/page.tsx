@@ -31,6 +31,11 @@ export default function Host() {
 
     const unsubscribeGame = subscribeToGame(gameId, (updatedGameState) => {
       setGameState(updatedGameState);
+      // Debug log for current question and buzzedPlayerId
+      if (updatedGameState?.currentQuestion) {
+        console.log("[HOST] Current Question:", updatedGameState.currentQuestion);
+        console.log("[HOST] buzzedPlayerId:", updatedGameState.currentQuestion.buzzedPlayerId);
+      }
     });
 
     return () => {
