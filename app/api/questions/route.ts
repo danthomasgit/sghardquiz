@@ -31,7 +31,10 @@ console.log('Extracted project ID:', projectId);
 
 const openai = new OpenAI({
   apiKey: apiKey,
-  project: projectId || undefined,
+  baseURL: 'https://api.openai.com/v1',
+  defaultHeaders: {
+    'OpenAI-Project': projectId || '',
+  },
 });
 
 export async function POST(request: Request) {
@@ -68,6 +71,7 @@ export async function POST(request: Request) {
       console.log('[API] OpenAI configuration:', {
         hasApiKey: !!apiKey,
         projectId: projectId,
+        baseURL: openai.baseURL,
         model: 'gpt-4'
       });
 
@@ -122,7 +126,8 @@ export async function POST(request: Request) {
         status: openaiError.status,
         type: openaiError.type,
         code: openaiError.code,
-        projectId: projectId
+        projectId: projectId,
+        baseURL: openai.baseURL
       });
       throw openaiError;
     }
