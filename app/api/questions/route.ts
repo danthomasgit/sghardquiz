@@ -8,7 +8,15 @@ console.log('Environment check:', {
   hasApiKey: !!apiKey,
   keyLength: apiKey?.length,
   keyPrefix: apiKey?.substring(0, 10),
-  allEnvVars: Object.keys(process.env).filter(key => key.includes('OPENAI'))
+  allEnvVars: Object.keys(process.env).filter(key => key.includes('OPENAI')),
+  // Log the first 10 characters of the key for debugging
+  keyStart: apiKey?.substring(0, 10),
+  // Log if the key contains any whitespace
+  hasWhitespace: apiKey?.includes(' '),
+  // Log if the key contains any newlines
+  hasNewlines: apiKey?.includes('\n'),
+  // Log the exact length
+  exactLength: apiKey?.length
 });
 
 if (!apiKey) {
@@ -18,7 +26,9 @@ if (!apiKey) {
   console.log('API Key format check:', {
     length: apiKey.length,
     startsWith: apiKey.substring(0, 3),
-    isValidFormat: apiKey.startsWith('sk-') || apiKey.startsWith('sk-proj-')
+    isValidFormat: apiKey.startsWith('sk-') || apiKey.startsWith('sk-proj-'),
+    // Log the exact prefix
+    prefix: apiKey.substring(0, 7)
   });
 }
 
@@ -36,8 +46,16 @@ const extractProjectId = (key: string) => {
 const projectId = extractProjectId(apiKey || '');
 console.log('Extracted project ID:', projectId);
 
+// Clean the API key by removing any whitespace or newlines
+const cleanApiKey = apiKey?.trim().replace(/\s+/g, '');
+console.log('Cleaned API key check:', {
+  originalLength: apiKey?.length,
+  cleanedLength: cleanApiKey?.length,
+  cleanedPrefix: cleanApiKey?.substring(0, 7)
+});
+
 const openai = new OpenAI({
-  apiKey: apiKey,
+  apiKey: cleanApiKey,
   baseURL: 'https://api.openai.com/v1',
   defaultHeaders: projectId ? {
     'OpenAI-Project': projectId,
