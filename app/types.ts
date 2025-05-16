@@ -31,4 +31,5 @@ export interface GameState {
   };
   currentPlayerIndex: string;
   currentQuestionIndex: number;
+  scores: { [playerId: string]: number };
 } 

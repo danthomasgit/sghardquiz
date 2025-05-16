@@ -23,9 +23,11 @@ function PlayerGame() {
   const createdPlayerIdRef = useRef<string | null>(null);
   const gameStateRef = useRef<GameState | null>(null);
   const [allPlayers, setAllPlayers] = useState<Player[]>([]);
+  const [gameState, setGameState] = useState<GameState | null>(null);
 
   useEffect(() => {
     let gameUnsubscribe: (() => void) | undefined;
+    let playersUnsubscribe: (() => void) | undefined;
     const storedPlayerId = localStorage.getItem("playerId");
     const storedPlayerName = localStorage.getItem("playerName");
     const storedPlayerSubject = localStorage.getItem("playerSubject");
@@ -61,6 +63,36 @@ function PlayerGame() {
       localStorage.setItem("playerName", playerName);
       localStorage.setItem("playerSubject", playerSubject);
 
+      // Async function for player creation (move here for scope)
+      const createAndSetPlayer = async () => {
+        try {
+          const playerId = await addPlayer("default-game", {
+            name: playerName,
+            subject: playerSubject,
+            score: 0,
+            buzzed: false,
+            hasBuzzed: false,
+            isOnline: true,
+            lastSeen: new Date(),
+          });
+          localStorage.setItem("playerId", playerId);
+          createdPlayerIdRef.current = playerId;
+          const currentGameState = gameStateRef.current;
+          if (currentGameState) {
+            const foundPlayer = currentGameState.players.find((p: Player) => p.id === playerId);
+            if (foundPlayer) {
+              setPlayer(foundPlayer);
+              setIsLoading(false);
+            }
+          }
+        } catch (err) {
+          setError("Failed to create player. Please try again.");
+          setIsLoading(false);
+        } finally {
+          isCreatingPlayerRef.current = false;
+        }
+      };
+
       const checkPlayer = async () => {
         if (hasInitializedRef.current) {
           console.log("Already initialized, skipping...");
@@ -83,8 +115,9 @@ function PlayerGame() {
           }
 
           // Subscribe to game updates
-          gameUnsubscribe = subscribeToGame("default-game", async (gameState: GameState) => {
+          gameUnsubscribe = subscribeToGame("default-game", (gameState: GameState) => {
             gameStateRef.current = gameState;
+            setGameState(gameState);
             // If we have a stored player ID, try to find that player
             if (storedPlayerId) {
               const foundPlayer = gameState.players.find(p => p.id === storedPlayerId);
@@ -106,32 +139,32 @@ function PlayerGame() {
             // If we don't have a player yet and we're not already creating one
             if (!player && !isCreatingPlayerRef.current) {
               isCreatingPlayerRef.current = true;
-              try {
-                const playerId = await addPlayer("default-game", {
-                  name: playerName,
-                  subject: playerSubject,
-                  score: 0,
-                  buzzed: false,
-                  hasBuzzed: false,
-                  isOnline: true,
-                  lastSeen: new Date(),
-                });
-                localStorage.setItem("playerId", playerId);
-                createdPlayerIdRef.current = playerId;
-                const currentGameState = gameStateRef.current;
-                if (currentGameState) {
-                  const foundPlayer = currentGameState.players.find(p => p.id === playerId);
-                  if (foundPlayer) {
-                    setPlayer(foundPlayer);
-                    setIsLoading(false);
-                  }
-                }
-              } catch (err) {
-                setError("Failed to create player. Please try again.");
-                setIsLoading(false);
-              } finally {
-                isCreatingPlayerRef.current = false;
-              }
+              createAndSetPlayer();
+            }
+            if (gameState.currentQuestion) {
+              setCurrentQuestion({
+                question: gameState.currentQuestion.question,
+                timeRemaining: gameState.currentQuestion.timeRemaining,
+              });
+              setIsCurrentPlayer(gameState.currentPlayerIndex === player?.id);
+              const canBuzzIn =
+                gameState.status === 'in_progress' &&
+                !gameState.currentQuestion.buzzedPlayerId &&
+                !player?.hasBuzzed;
+              setCanBuzz(!!canBuzzIn);
+            } else {
+              setCurrentQuestion(null);
+              setIsCurrentPlayer(false);
+              setCanBuzz(false);
+            }
+          });
+          // Subscribe to players for presence/online status only
+          playersUnsubscribe = subscribeToPlayers("default-game", (updatedPlayers) => {
+            setAllPlayers(updatedPlayers);
+            // Update the current player from Firestore
+            if (player) {
+              const updatedCurrent = updatedPlayers.find(p => p.id === player.id);
+              if (updatedCurrent) setPlayer(updatedCurrent);
             }
           });
         } catch (err) {
@@ -146,9 +179,8 @@ function PlayerGame() {
     }
 
     return () => {
-      if (gameUnsubscribe) {
-        gameUnsubscribe();
-      }
+      if (gameUnsubscribe) gameUnsubscribe();
+      if (playersUnsubscribe) playersUnsubscribe();
       hasInitializedRef.current = false;
       createdPlayerIdRef.current = null;
       gameStateRef.current = null;
@@ -209,21 +241,6 @@ function PlayerGame() {
     };
   }, [player]);
 
-  useEffect(() => {
-    if (!player) return;
-
-    const unsubscribePlayers = subscribeToPlayers("default-game", (updatedPlayers) => {
-      setAllPlayers(updatedPlayers);
-      // Update the current player from Firestore
-      const updatedCurrent = updatedPlayers.find(p => p.id === player.id);
-      if (updatedCurrent) setPlayer(updatedCurrent);
-    });
-
-    return () => {
-      unsubscribePlayers();
-    };
-  }, [player]);
-
   const handleBuzzer = async () => {
     if (!player || !canBuzz) return;
     console.log('[PLAYER] Buzz button pressed by', player.id);
@@ -235,7 +252,10 @@ function PlayerGame() {
     }
   };
 
-  const sortedPlayers = [...allPlayers].sort((a, b) => b.score - a.score);
+  const scoresArray = gameState && gameState.scores && allPlayers.length > 0
+    ? allPlayers.map(p => ({ ...p, score: gameState.scores[p.id] ?? 0 }))
+    : [];
+  const sortedPlayers = [...scoresArray].sort((a, b) => b.score - a.score);
 
   if (isLoading) {
     return (

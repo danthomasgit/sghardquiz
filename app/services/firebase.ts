@@ -28,7 +28,8 @@ export const createGame = async (gameId: string): Promise<void> => {
     status: 'waiting',
     currentPlayerIndex: 0,
     currentQuestionIndex: 0,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    scores: {},
   });
 };
 
@@ -174,11 +175,13 @@ export const addPlayer = async (gameId: string, player: Omit<Player, 'id' | 'que
       ...newPlayer,
       lastSeen: new Date().toISOString()
     }];
-    
+    // Add player to scores map
+    const updatedScores = { ...gameData.scores, [playerId]: 0 };
     // Use a transaction to ensure atomic update
     const batch = writeBatch(db);
     batch.update(gameRef, {
-      players: updatedPlayers
+      players: updatedPlayers,
+      scores: updatedScores
     });
     await batch.commit();
   }
@@ -291,41 +294,33 @@ export const updateAnswerStatus = async (
 ): Promise<void> => {
   const gameRef = doc(db, GAMES_COLLECTION, gameId);
   const gameDoc = await getDoc(gameRef);
-  
   if (!gameDoc.exists()) {
     throw new Error('Game not found');
   }
-
   const gameData = gameDoc.data() as GameState;
   if (!gameData.currentQuestion) {
     throw new Error('No active question');
   }
-
   const buzzedPlayerId = gameData.currentQuestion.buzzedPlayerId;
   if (!buzzedPlayerId) {
     throw new Error('No player has buzzed in');
   }
-
+  // Update the scores map
+  let updatedScores = { ...gameData.scores };
+  if (status === 'correct') {
+    updatedScores[buzzedPlayerId] = (updatedScores[buzzedPlayerId] || 0) + 10;
+  } else if (status === 'incorrect') {
+    updatedScores[buzzedPlayerId] = (updatedScores[buzzedPlayerId] || 0) - 10;
+  } else if (status === 'steal' && stealPlayerId) {
+    updatedScores[stealPlayerId] = (updatedScores[stealPlayerId] || 0) + 15;
+  }
+  // Batch update: answer status and scores
   const batch = writeBatch(db);
-
-  // Update the game state
   batch.update(gameRef, {
     'currentQuestion.answerStatus': status,
-    ...(status === 'steal' && stealPlayerId ? { 'currentQuestion.stealPlayerId': stealPlayerId } : {})
+    ...(status === 'steal' && stealPlayerId ? { 'currentQuestion.stealPlayerId': stealPlayerId } : {}),
+    scores: updatedScores
   });
-
-  // Update player scores
-  if (status === 'correct') {
-    const buzzedPlayerRef = doc(db, PLAYERS_COLLECTION, buzzedPlayerId);
-    batch.update(buzzedPlayerRef, { score: increment(10) });
-  } else if (status === 'incorrect') {
-    const buzzedPlayerRef = doc(db, PLAYERS_COLLECTION, buzzedPlayerId);
-    batch.update(buzzedPlayerRef, { score: increment(-10) });
-  } else if (status === 'steal') {
-    const buzzedPlayerRef = doc(db, PLAYERS_COLLECTION, buzzedPlayerId);
-    batch.update(buzzedPlayerRef, { score: increment(15) });
-  }
-
   // Reset all buzzers
   const playersQuery = query(
     collection(db, PLAYERS_COLLECTION),
@@ -335,7 +330,6 @@ export const updateAnswerStatus = async (
   playersSnapshot.docs.forEach((doc) => {
     batch.update(doc.ref, { buzzed: false, hasBuzzed: false });
   });
-
   await batch.commit();
 };
 

@@ -23,12 +23,12 @@ export default function Host() {
 
   useEffect(() => {
     const gameId = "default-game";
-    
+    // Subscribe to players for presence/online status only
     const unsubscribePlayers = subscribeToPlayers(gameId, (updatedPlayers) => {
       setPlayers(updatedPlayers);
       setIsLoading(false);
     });
-
+    // Subscribe to game for game state and scores
     const unsubscribeGame = subscribeToGame(gameId, (updatedGameState) => {
       setGameState(updatedGameState);
       // Debug log for current question and buzzedPlayerId
@@ -37,7 +37,6 @@ export default function Host() {
         console.log("[HOST] buzzedPlayerId:", updatedGameState.currentQuestion.buzzedPlayerId);
       }
     });
-
     return () => {
       unsubscribePlayers();
       unsubscribeGame();
@@ -123,6 +122,12 @@ export default function Host() {
     }
   };
 
+  // For the scores list:
+  const scoresArray = gameState && gameState.scores && players.length > 0
+    ? players.map(p => ({ ...p, score: gameState.scores[p.id] ?? 0 }))
+    : [];
+  const sortedPlayers = [...scoresArray].sort((a, b) => b.score - a.score);
+
   if (isLoading) {
     return (
       <div className={styles.page}>
@@ -205,7 +210,7 @@ export default function Host() {
       )}
 
       <div className={styles.playersGrid}>
-        {players.map(player => (
+        {sortedPlayers.map(player => (
           <div 
             key={player.id} 
             className={`${styles.playerCard} ${player.buzzed ? styles.buzzed : ''}`}
