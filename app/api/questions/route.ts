@@ -18,9 +18,9 @@ console.log('Raw API Key from environment:', {
   prefixChars: apiKey?.substring(0, 7).split('').map(c => c.charCodeAt(0))
 });
 
-// Clean the API key by removing any whitespace or newlines
-const cleanApiKey = apiKey?.trim().replace(/\s+/g, '');
-console.log('Cleaned API Key:', {
+// Clean and validate the API key
+let cleanApiKey = apiKey?.trim().replace(/\s+/g, '');
+console.log('Initial cleaned API Key:', {
   length: cleanApiKey?.length,
   first10Chars: cleanApiKey?.substring(0, 10),
   last10Chars: cleanApiKey?.substring(-10),
@@ -29,6 +29,21 @@ console.log('Cleaned API Key:', {
   // Log each character of the prefix for debugging
   prefixChars: cleanApiKey?.substring(0, 7).split('').map(c => c.charCodeAt(0))
 });
+
+// Fix the API key format if needed
+if (cleanApiKey?.startsWith('k-proj-')) {
+  console.log('Fixing API key format from k-proj- to sk-proj-');
+  cleanApiKey = 's' + cleanApiKey;
+  console.log('Fixed API Key:', {
+    length: cleanApiKey.length,
+    first10Chars: cleanApiKey.substring(0, 10),
+    last10Chars: cleanApiKey.substring(-10),
+    containsSkProj: cleanApiKey.includes('sk-proj-'),
+    containsKProj: cleanApiKey.includes('k-proj-'),
+    // Log each character of the prefix for debugging
+    prefixChars: cleanApiKey.substring(0, 7).split('').map(c => c.charCodeAt(0))
+  });
+}
 
 if (!apiKey) {
   console.error('OPENAI_API_KEY is not set in environment variables');
