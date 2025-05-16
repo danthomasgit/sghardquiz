@@ -7,8 +7,9 @@ import { Player, GameState } from "../types";
 import { addPlayer, updatePlayerBuzzer, updatePlayerOnlineStatus, subscribeToGame, createGame, subscribeToPlayers } from "../services/firebase";
 import { getDoc, doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { db } from '../firebase';
+import { Suspense } from 'react';
 
-export default function PlayPage() {
+function PlayerGame() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [player, setPlayer] = useState<Player | null>(null);
@@ -307,5 +308,13 @@ export default function PlayPage() {
         </ul>
       </div>
     </div>
+  );
+}
+
+export default function PlayPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PlayerGame />
+    </Suspense>
   );
 } 
