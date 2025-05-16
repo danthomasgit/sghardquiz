@@ -4,6 +4,13 @@ import { Question } from '@/app/types';
 
 // Add more detailed API key validation
 const apiKey = process.env.OPENAI_API_KEY;
+console.log('Environment check:', {
+  hasApiKey: !!apiKey,
+  keyLength: apiKey?.length,
+  keyPrefix: apiKey?.substring(0, 10),
+  allEnvVars: Object.keys(process.env).filter(key => key.includes('OPENAI'))
+});
+
 if (!apiKey) {
   console.error('OPENAI_API_KEY is not set in environment variables');
 } else {
