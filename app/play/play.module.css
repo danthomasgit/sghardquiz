@@ -1,0 +1,189 @@
+.page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.header h1 {
+  font-size: 2rem;
+  color: #1a1a1a;
+  margin: 0 0 0.5rem 0;
+}
+
+.subject {
+  color: #4b5563;
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.questionCard {
+  background: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 600px;
+}
+
+.questionCard h2 {
+  margin: 0 0 1rem 0;
+  color: #1a1a1a;
+  font-size: 1.5rem;
+}
+
+.question {
+  font-size: 1.5rem;
+  color: #1a1a1a;
+  margin: 0 0 1rem 0;
+  line-height: 1.4;
+}
+
+.timer {
+  font-size: 1.2rem;
+  color: #dc2626;
+  font-weight: 600;
+  margin: 0;
+}
+
+.buzzerContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.buzzerButton {
+  background: #dc2626;
+  color: white;
+  padding: 2rem;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 200px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.buzzerButton:hover:not(:disabled) {
+  background: #b91c1c;
+  transform: scale(1.05);
+}
+
+.buzzerButton:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.buzzerButton.buzzed {
+  background: #16a34a;
+  animation: pulse 1s infinite;
+}
+
+.waitMessage {
+  color: #4b5563;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.loading {
+  background: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  text-align: center;
+  max-width: 400px;
+  margin: auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.loading p {
+  color: #666;
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.error {
+  background: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  text-align: center;
+  max-width: 400px;
+  margin: auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.error p {
+  color: #dc2626;
+  margin: 0 0 1rem 0;
+  font-size: 1.2rem;
+}
+
+.homeButton {
+  background: #3b82f6;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.homeButton:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 1rem;
+  }
+
+  .header h1 {
+    font-size: 1.5rem;
+  }
+
+  .questionCard {
+    padding: 1.5rem;
+  }
+
+  .question {
+    font-size: 1.25rem;
+  }
+
+  .buzzerButton {
+    width: 150px;
+    height: 150px;
+    font-size: 1.25rem;
+  }
+} 
