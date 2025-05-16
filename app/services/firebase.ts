@@ -314,6 +314,13 @@ export const updateAnswerStatus = async (
   } else if (status === 'steal' && stealPlayerId) {
     updatedScores[buzzedPlayerId] = (updatedScores[buzzedPlayerId] || 0) + 15;
   }
+  // Debug logging
+  console.log('[updateAnswerStatus]', {
+    buzzedPlayerId,
+    status,
+    stealPlayerId,
+    updatedScores
+  });
   // Batch update: answer status and scores
   const batch = writeBatch(db);
   batch.update(gameRef, {
