@@ -312,7 +312,7 @@ export const updateAnswerStatus = async (
   } else if (status === 'incorrect') {
     updatedScores[buzzedPlayerId] = (updatedScores[buzzedPlayerId] || 0) - 10;
   } else if (status === 'steal' && stealPlayerId) {
-    updatedScores[stealPlayerId] = (updatedScores[stealPlayerId] || 0) + 15;
+    updatedScores[buzzedPlayerId] = (updatedScores[buzzedPlayerId] || 0) + 15;
   }
   // Batch update: answer status and scores
   const batch = writeBatch(db);

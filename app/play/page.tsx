@@ -220,8 +220,10 @@ function PlayerGame() {
     }
   };
 
-  const scoresArray = gameState && gameState.scores && allPlayers.length > 0
-    ? allPlayers.map(p => ({ ...p, score: gameState.scores[p.id] ?? 0 }))
+  // For the scores list:
+  const playersList = gameState?.players || [];
+  const scoresArray = playersList.length > 0 && gameState && gameState.scores
+    ? playersList.map(p => ({ ...p, score: gameState.scores[p.id] ?? 0 }))
     : [];
   const sortedPlayers = [...scoresArray].sort((a, b) => b.score - a.score);
 
