@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { Question } from '@/app/types';
 
+// Add logging to check if API key is present
+if (!process.env.OPENAI_API_KEY) {
+  console.error('OPENAI_API_KEY is not set in environment variables');
+}
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -9,6 +14,7 @@ const openai = new OpenAI({
 export async function POST(request: Request) {
   try {
     const { subject, count = 5 } = await request.json();
+    console.log(`Generating ${count} questions for subject: ${subject}`);
 
     const prompt = `Generate ${count} trivia questions about ${subject}. 
     Requirements:
@@ -29,6 +35,7 @@ export async function POST(request: Request) {
       }
     ]`;
 
+    console.log('Sending request to OpenAI...');
     const completion = await openai.chat.completions.create({
       messages: [
         {
@@ -46,9 +53,11 @@ export async function POST(request: Request) {
 
     const response = completion.choices[0].message.content;
     if (!response) {
+      console.error('No response content from OpenAI');
       throw new Error('No response from OpenAI');
     }
 
+    console.log('Received response from OpenAI, cleaning and parsing...');
     // Clean the response to ensure it's valid JSON
     const cleanedResponse = response.trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
     
@@ -63,6 +72,7 @@ export async function POST(request: Request) {
         difficulty: q.difficulty === 'medium' || q.difficulty === 'hard' ? q.difficulty : 'medium'
       }));
 
+      console.log(`Successfully generated ${formattedQuestions.length} questions`);
       return NextResponse.json({ questions: formattedQuestions });
     } catch (parseError) {
       console.error('Error parsing OpenAI response:', parseError);
@@ -70,9 +80,14 @@ export async function POST(request: Request) {
       throw new Error('Failed to parse questions from OpenAI response');
     }
   } catch (error) {
-    console.error('Error generating questions:', error);
+    console.error('Error in question generation:', error);
+    // Return more detailed error information
     return NextResponse.json(
-      { error: 'Failed to generate questions' },
+      { 
+        error: 'Failed to generate questions',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     );
   }
