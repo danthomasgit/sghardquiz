@@ -22,7 +22,7 @@ function PlayerGame() {
   const hasInitializedRef = useRef(false);
   const createdPlayerIdRef = useRef<string | null>(null);
   const gameStateRef = useRef<GameState | null>(null);
-  const [otherPlayers, setOtherPlayers] = useState<Player[]>([]);
+  const [allPlayers, setAllPlayers] = useState<Player[]>([]);
 
   useEffect(() => {
     let gameUnsubscribe: (() => void) | undefined;
@@ -213,9 +213,10 @@ function PlayerGame() {
     if (!player) return;
 
     const unsubscribePlayers = subscribeToPlayers("default-game", (updatedPlayers) => {
-      // Filter out the current player
-      const filteredPlayers = updatedPlayers.filter(p => p.id !== player.id);
-      setOtherPlayers(filteredPlayers);
+      setAllPlayers(updatedPlayers);
+      // Update the current player from Firestore
+      const updatedCurrent = updatedPlayers.find(p => p.id === player.id);
+      if (updatedCurrent) setPlayer(updatedCurrent);
     });
 
     return () => {
@@ -232,8 +233,6 @@ function PlayerGame() {
     }
   };
 
-  // Combine all players for the scores list
-  const allPlayers = player ? [player, ...otherPlayers] : otherPlayers;
   const sortedPlayers = [...allPlayers].sort((a, b) => b.score - a.score);
 
   if (isLoading) {
