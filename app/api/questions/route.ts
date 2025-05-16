@@ -17,6 +17,8 @@ if (!apiKey) {
 
 const openai = new OpenAI({
   apiKey: apiKey,
+  organization: process.env.OPENAI_ORG_ID, // Add organization ID if needed
+  project: process.env.OPENAI_PROJECT_ID, // Add project ID if needed
 });
 
 export async function POST(request: Request) {
@@ -98,7 +100,9 @@ export async function POST(request: Request) {
         message: openaiError.message,
         status: openaiError.status,
         type: openaiError.type,
-        code: openaiError.code
+        code: openaiError.code,
+        organization: process.env.OPENAI_ORG_ID,
+        project: process.env.OPENAI_PROJECT_ID
       });
       throw openaiError;
     }
