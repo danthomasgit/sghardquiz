@@ -307,12 +307,10 @@ export const updateAnswerStatus = async (
   }
   // Update the scores map
   let updatedScores = { ...gameData.scores };
-  if (status === 'correct') {
-    updatedScores[buzzedPlayerId] = (updatedScores[buzzedPlayerId] || 0) + 10;
+  if (status === 'correct' || status === 'steal') {
+    updatedScores[buzzedPlayerId] = (updatedScores[buzzedPlayerId] || 0) + (status === 'steal' ? 15 : 10);
   } else if (status === 'incorrect') {
     updatedScores[buzzedPlayerId] = (updatedScores[buzzedPlayerId] || 0) - 10;
-  } else if (status === 'steal' && stealPlayerId) {
-    updatedScores[buzzedPlayerId] = (updatedScores[buzzedPlayerId] || 0) + 15;
   }
   // Debug logging
   console.log('[updateAnswerStatus]', {
