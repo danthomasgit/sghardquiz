@@ -134,17 +134,41 @@ export async function POST(request: Request) {
         type: openaiError.type,
         code: openaiError.code,
         projectId: projectId,
-        baseURL: openai.baseURL
+        baseURL: openai.baseURL,
+        stack: openaiError.stack
       });
-      throw openaiError;
+      
+      // Return a more detailed error response
+      return NextResponse.json(
+        {
+          error: 'OpenAI API Error',
+          details: {
+            message: openaiError.message,
+            status: openaiError.status,
+            type: openaiError.type,
+            code: openaiError.code
+          },
+          timestamp: new Date().toISOString()
+        },
+        { status: openaiError.status || 500 }
+      );
     }
-  } catch (error) {
-    console.error('[API] Error in question generation:', error);
+  } catch (error: any) {
+    console.error('[API] Error in question generation:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    
     // Return more detailed error information
     return NextResponse.json(
       { 
         error: 'Failed to generate questions',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        details: {
+          message: error.message,
+          name: error.name,
+          stack: error.stack
+        },
         timestamp: new Date().toISOString()
       },
       { status: 500 }
