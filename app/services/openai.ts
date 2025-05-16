@@ -21,7 +21,14 @@ export async function generateQuestions(subject: string, count: number = 5): Pro
         statusText: response.statusText,
         errorData
       });
-      throw new Error(`Failed to generate questions: ${response.statusText}`);
+
+      // If it's an API key error, don't fall back to default questions
+      if (errorData.details?.code === 'invalid_api_key') {
+        throw new Error('OpenAI API key is invalid. Please check your configuration.');
+      }
+
+      // For other errors, try to use the error message from the API
+      throw new Error(errorData.details?.message || `Failed to generate questions: ${response.statusText}`);
     }
 
     const data = await response.json();
@@ -39,6 +46,12 @@ export async function generateQuestions(subject: string, count: number = 5): Pro
     return data.questions;
   } catch (error) {
     console.error('[Service] Error in generateQuestions:', error);
+    
+    // Only fall back to default questions for non-API key errors
+    if (error instanceof Error && error.message.includes('API key')) {
+      throw error; // Re-throw API key errors
+    }
+    
     console.log('[Service] Falling back to default questions');
     return generateFallbackQuestions(subject, count);
   }
