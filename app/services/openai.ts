@@ -26,28 +26,15 @@ function generateFallbackQuestions(subject: string, count: number): Question[] {
   const fallbackQuestions: Question[] = [
     {
       question: `What is a key concept in ${subject}?`,
-      answer: 'This is a fallback question',
-      difficulty: 'medium'
+      answer: 'This is a fallback question'
     },
     {
       question: `Name a famous figure in ${subject}`,
-      answer: 'This is a fallback question',
-      difficulty: 'medium'
+      answer: 'This is a fallback question'
     },
     {
-      question: `What is an advanced topic in ${subject}?`,
-      answer: 'This is a fallback question',
-      difficulty: 'hard'
-    },
-    {
-      question: `What is a significant development in ${subject}?`,
-      answer: 'This is a fallback question',
-      difficulty: 'hard'
-    },
-    {
-      question: `What is a controversial aspect of ${subject}?`,
-      answer: 'This is a fallback question',
-      difficulty: 'hard'
+      question: `What is an important event in ${subject}?`,
+      answer: 'This is a fallback question'
     }
   ];
 
