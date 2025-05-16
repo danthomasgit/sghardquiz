@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { Question } from '@/app/types';
 
+console.log('=== API ROUTE STARTED ===');
+console.log('=== ENVIRONMENT CHECK ===');
+
 // Add more detailed API key validation
 const apiKey = process.env.OPENAI_API_KEY;
 console.log('Environment check:', {
@@ -63,14 +66,17 @@ const openai = new OpenAI({
 });
 
 export async function POST(request: Request) {
+  console.log('=== POST REQUEST RECEIVED ===');
   try {
     // Verify API key is available before proceeding
     if (!apiKey) {
+      console.error('=== API KEY MISSING ===');
       throw new Error('OpenAI API key is not configured');
     }
 
     const { subject, count = 5 } = await request.json();
-    console.log(`[API] Starting question generation for subject: ${subject}, count: ${count}`);
+    console.log(`=== GENERATING QUESTIONS ===`);
+    console.log(`Subject: ${subject}, Count: ${count}`);
 
     const prompt = `Generate ${count} trivia questions about ${subject}. 
     Requirements:
@@ -91,9 +97,9 @@ export async function POST(request: Request) {
       }
     ]`;
 
-    console.log('[API] Sending request to OpenAI...');
+    console.log('=== SENDING REQUEST TO OPENAI ===');
     try {
-      console.log('[API] OpenAI configuration:', {
+      console.log('OpenAI configuration:', {
         hasApiKey: !!apiKey,
         projectId: projectId,
         baseURL: openai.baseURL,
@@ -115,20 +121,20 @@ export async function POST(request: Request) {
         temperature: 0.7,
       });
 
-      console.log('[API] Received response from OpenAI');
+      console.log('=== RECEIVED RESPONSE FROM OPENAI ===');
       const response = completion.choices[0].message.content;
       if (!response) {
-        console.error('[API] No response content from OpenAI');
+        console.error('=== NO RESPONSE CONTENT ===');
         throw new Error('No response from OpenAI');
       }
 
-      console.log('[API] Cleaning and parsing response...');
+      console.log('=== PARSING RESPONSE ===');
       // Clean the response to ensure it's valid JSON
       const cleanedResponse = response.trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
       
       try {
         const parsedResponse = JSON.parse(cleanedResponse);
-        console.log('[API] Successfully parsed JSON response');
+        console.log('=== SUCCESSFULLY PARSED JSON ===');
         const questions = Array.isArray(parsedResponse) ? parsedResponse : parsedResponse.questions;
 
         // Validate and transform the questions
@@ -138,15 +144,15 @@ export async function POST(request: Request) {
           difficulty: q.difficulty === 'medium' || q.difficulty === 'hard' ? q.difficulty : 'medium'
         }));
 
-        console.log(`[API] Successfully generated ${formattedQuestions.length} questions`);
+        console.log(`=== SUCCESSFULLY GENERATED ${formattedQuestions.length} QUESTIONS ===`);
         return NextResponse.json({ questions: formattedQuestions });
       } catch (parseError) {
-        console.error('[API] Error parsing OpenAI response:', parseError);
-        console.error('[API] Raw response:', response);
+        console.error('=== ERROR PARSING RESPONSE ===', parseError);
+        console.error('Raw response:', response);
         throw new Error('Failed to parse questions from OpenAI response');
       }
     } catch (openaiError: any) {
-      console.error('[API] OpenAI API Error:', {
+      console.error('=== OPENAI API ERROR ===', {
         message: openaiError.message,
         status: openaiError.status,
         type: openaiError.type,
@@ -172,7 +178,7 @@ export async function POST(request: Request) {
       );
     }
   } catch (error: any) {
-    console.error('[API] Error in question generation:', {
+    console.error('=== GENERAL ERROR ===', {
       message: error.message,
       stack: error.stack,
       name: error.name
