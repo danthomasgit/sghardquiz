@@ -227,6 +227,9 @@ function PlayerGame() {
     : [];
   const sortedPlayers = [...scoresArray].sort((a, b) => b.score - a.score);
 
+  const subjectOwner =
+    gameState?.players?.find(p => p.id === gameState?.currentQuestion?.playerId)?.name;
+
   if (isLoading) {
     return (
       <div className={styles.page}>
@@ -275,11 +278,11 @@ function PlayerGame() {
               <p className={styles.question}>{currentQuestion.question}</p>
               <p className={styles.timer}>Time Remaining: {currentQuestion.timeRemaining}s</p>
               <p className={styles.subjectInfo}>
-                {isCurrentPlayer ? "Your subject!" : (
-                  gameStateRef.current?.currentQuestion?.playerId === player.id 
-                    ? "Your subject!" 
-                    : `About ${allPlayers.find(p => p.id === gameStateRef.current?.currentQuestion?.playerId)?.name || 'another player'}'s subject`
-                )}
+                {isCurrentPlayer
+                  ? "Your subject!"
+                  : subjectOwner
+                    ? `About ${subjectOwner}'s subject`
+                    : "About a player's subject"}
               </p>
             </div>
           )}
